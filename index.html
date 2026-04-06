@@ -15,14 +15,14 @@
     brideName:   "Катерина",
 
     /* Дата та час весілля (рік, місяць-1, день, година, хвилина) */
-    weddingDate: new Date(2025, 7, 15, 16, 0, 0),
+    weddingDate: new Date(2026, 7, 15, 16, 0, 0),
 
     /* Деталі події */
     time:        "Збір гостей о 16:00",
     venue:       "ресторан Saona",
     address:     "вул. Хрещатик, 22, Київ",
     dresscode:   "Святковий · Пастельні тони",
-    rsvpDeadline:"до 1 серпня 2025",
+    rsvpDeadline:"до 1 серпня 2026",
 
     /* Google Apps Script URL — замінити після налаштування (інструкція нижче) */
     sheetsUrl:   "https://script.google.com/macros/s/AKfycbzAQ1txq7FBCluX9ACyVK4ZeRQZbyM-9_OLIC3iFpTSlPDULBA7d1SK6618FFT1pKbZ/exec",
@@ -679,14 +679,26 @@ function pad(n) { return n < 10 ? '0'+n : ''+n; }
 
 function tick() {
   var diff = CONFIG.weddingDate - new Date();
-  if (diff < 0) diff = 0;
+  if (diff <= 0) {
+    /* Весілля вже відбулось — показуємо святкове повідомлення */
+    clearInterval(timerInterval);
+    var grid = document.querySelector('.timer-grid');
+    grid.innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:1.2rem 0.5rem;">' +
+        '<div style="font-family:var(--serif);font-size:clamp(20px,6vw,28px);font-style:italic;font-weight:300;color:var(--accent);line-height:1.4;">' +
+          '🤍 Цей день уже відбувся!<br>' +
+          '<span style="font-size:0.75em;color:var(--text-light);">Дякуємо всім, хто був поруч</span>' +
+        '</div>' +
+      '</div>';
+    return;
+  }
   document.getElementById('t-d').textContent = pad(Math.floor(diff / 86400000));
   document.getElementById('t-h').textContent = pad(Math.floor((diff % 86400000) / 3600000));
   document.getElementById('t-m').textContent = pad(Math.floor((diff % 3600000)  / 60000));
   document.getElementById('t-s').textContent = pad(Math.floor((diff % 60000)    / 1000));
 }
 tick();
-setInterval(tick, 1000);
+var timerInterval = setInterval(tick, 1000);
 
 /* ── RSVP ───────────────────────────────────────────────────── */
 var attend = null;
