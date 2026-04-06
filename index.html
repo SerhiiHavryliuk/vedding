@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Олексій & Катерина · 15.08.2025</title>
+
+<!-- ═══════════════════════════════════════════════════════════
+     НАЛАШТУВАННЯ — змінюй тут
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+  var CONFIG = {
+    /* Імена молодят */
+    groomName:   "Олексій",
+    brideName:   "Катерина",
+
+    /* Дата та час весілля (рік, місяць-1, день, година, хвилина) */
+    weddingDate: new Date(2025, 7, 15, 16, 0, 0),
+
+    /* Деталі події */
+    time:        "Збір гостей о 16:00",
+    venue:       "ресторан Saona",
+    address:     "вул. Хрещатик, 22, Київ",
+    dresscode:   "Святковий · Пастельні тони",
+    rsvpDeadline:"до 1 серпня 2025",
+
+    /* Google Apps Script URL — замінити після налаштування (інструкція нижче) */
+    sheetsUrl:   "PASTE_YOUR_APPS_SCRIPT_URL_HERE",
+
+    /* Посилання на Google Maps (необов'язково) */
+    mapsUrl:     "https://maps.google.com/?q=Хрещатик+22+Київ"
+  };
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ШРИФТИ
+     ═══════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ─── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ivory:      #FAF8F3;
+  --ivory-mid:  #F2EFE8;
+  --ivory-dark: #E8E3D9;
+  --text:       #2A2520;
+  --text-mid:   #6B6157;
+  --text-light: #A09488;
+  --accent:     #8B6F5E;
+  --accent-lt:  #D4B8AC;
+  --green:      #4A7C59;
+  --green-lt:   #EAF2EC;
+  --red:        #8B3A2F;
+  --red-lt:     #F5EAE8;
+  --serif:      'Cormorant Garamond', Georgia, serif;
+  --sans:       'Jost', system-ui, sans-serif;
+  --radius:     10px;
+  --radius-lg:  16px;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--ivory);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Page layout ──────────────────────────────────────────── */
+.page {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 0 0 4rem;
+}
+
+/* ─── Hero ─────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 4rem 2rem 2.5rem;
+  position: relative;
+}
+
+.hero::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: var(--accent-lt);
+  margin: 2rem auto 0;
+}
+
+.hero-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-bottom: 1.4rem;
+  font-weight: 300;
+}
+
+.hero-names {
+  font-family: var(--serif);
+  font-size: clamp(44px, 12vw, 62px);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.hero-amp {
+  display: block;
+  font-family: var(--serif);
+  font-size: 0.55em;
+  color: var(--accent-lt);
+  margin: 0.3rem 0;
+  font-style: normal;
+}
+
+.hero-date {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--text-light);
+  margin-top: 1.5rem;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+/* ─── Ornament ─────────────────────────────────────────────── */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 2rem;
+  margin: 1.5rem 0;
+}
+.ornament-line { flex: 1; height: 0.5px; background: var(--ivory-dark); }
+.ornament-leaf {
+  color: var(--accent-lt);
+  font-size: 14px;
+  user-select: none;
+}
+
+/* ─── Section ──────────────────────────────────────────────── */
+.section { padding: 0 2rem 1.5rem; }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 1.2rem;
+  font-weight: 400;
+}
+
+/* ─── Timer ────────────────────────────────────────────────── */
+.timer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.timer-box {
+  background: #fff;
+  border: 0.5px solid var(--ivory-dark);
+  border-radius: var(--radius);
+  text-align: center;
+  padding: 16px 4px 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--ivory) 100%);
+  pointer-events: none;
+}
+
+.timer-num {
+  display: block;
+  font-family: var(--serif);
+  font-size: clamp(28px, 9vw, 40px);
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1;
+  transition: opacity 0.2s;
+}
+
+.timer-unit {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-top: 5px;
+  font-weight: 300;
+}
+
+/* ─── Details ──────────────────────────────────────────────── */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.detail-card {
+  background: #fff;
+  border: 0.5px solid var(--ivory-dark);
+  border-radius: var(--radius);
+  padding: 14px 14px 12px;
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.detail-card:hover { border-color: var(--accent-lt); }
+
+.detail-card.map-link {
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+
+.detail-card.map-link:hover .detail-val { color: var(--accent); }
+
+.detail-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.detail-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ivory-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.detail-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.detail-val {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  font-weight: 300;
+  padding-left: 36px;
+  transition: color 0.2s;
+}
+
+/* ─── RSVP Form ────────────────────────────────────────────── */
+.rsvp-wrap {
+  padding: 0 2rem;
+}
+
+.rsvp-heading {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 300;
+  text-align: center;
+  margin-bottom: 1.6rem;
+  color: var(--text);
+}
+
+.field-group { margin-bottom: 14px; }
+
+.field-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-bottom: 7px;
+  font-weight: 400;
+}
+
+input[type=text],
+input[type=tel],
+input[type=email],
+select,
+textarea {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text);
+  background: #fff;
+  border: 0.5px solid var(--ivory-dark);
+  border-radius: var(--radius);
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.25s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-lt);
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A09488' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+/* ─── Attend buttons ────────────────────────────────────────── */
+.attend-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.attend-btn {
+  padding: 12px 10px;
+  border: 0.5px solid var(--ivory-dark);
+  border-radius: var(--radius);
+  background: #fff;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  user-select: none;
+}
+
+.attend-btn:hover { border-color: var(--accent-lt); }
+
+.attend-btn.yes-active {
+  border-color: var(--green);
+  background: var(--green-lt);
+  color: var(--green);
+}
+
+.attend-btn.no-active {
+  border-color: var(--red);
+  background: var(--red-lt);
+  color: var(--red);
+}
+
+/* ─── Submit ────────────────────────────────────────────────── */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--text);
+  color: var(--ivory);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.submit-btn:hover  { background: var(--accent); }
+.submit-btn:active { transform: scale(0.99); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Success ───────────────────────────────────────────────── */
+.success-box {
+  display: none;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: #fff;
+  border: 0.5px solid var(--ivory-dark);
+  border-radius: var(--radius-lg);
+}
+
+.success-icon {
+  font-size: 36px;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.success-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.success-text {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+/* ─── Guest list ────────────────────────────────────────────── */
+.guests-wrap {
+  margin-top: 2rem;
+  display: none;
+}
+
+.guest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--ivory-dark);
+  animation: slideIn 0.35s ease both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.guest-name { font-size: 14px; font-weight: 300; color: var(--text); }
+.guest-sub  { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+
+.g-badge {
+  font-size: 10px;
+  padding: 3px 12px;
+  border-radius: 99px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.g-yes { background: var(--green-lt); color: var(--green); }
+.g-no  { background: var(--red-lt);   color: var(--red); }
+
+.guests-stats {
+  font-size: 11px;
+  color: var(--text-light);
+  text-align: center;
+  padding: 12px 0 0;
+  letter-spacing: 1.5px;
+}
+
+/* ─── Error toast ───────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text);
+  color: var(--ivory);
+  font-size: 13px;
+  font-weight: 300;
+  padding: 12px 24px;
+  border-radius: 99px;
+  white-space: nowrap;
+  transition: transform 0.3s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ─── Footer ────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 3rem 2rem 0;
+  font-size: 11px;
+  color: var(--text-light);
+  letter-spacing: 1px;
+  font-weight: 300;
+}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="page">
+
+  <!-- HERO -->
+  <header class="hero">
+    <p class="hero-label">Запрошують на весілля</p>
+    <h1 class="hero-names" id="names-el">
+      <!-- заповнюється JS -->
+    </h1>
+    <p class="hero-date" id="date-el"></p>
+  </header>
+
+  <!-- TIMER -->
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-leaf">✦</div>
+    <div class="ornament-line"></div>
+  </div>
+
+  <section class="section">
+    <p class="section-label">До свята залишилось</p>
+    <div class="timer-grid">
+      <div class="timer-box"><span class="timer-num" id="t-d">00</span><span class="timer-unit">Днів</span></div>
+      <div class="timer-box"><span class="timer-num" id="t-h">00</span><span class="timer-unit">Годин</span></div>
+      <div class="timer-box"><span class="timer-num" id="t-m">00</span><span class="timer-unit">Хвилин</span></div>
+      <div class="timer-box"><span class="timer-num" id="t-s">00</span><span class="timer-unit">Секунд</span></div>
+    </div>
+  </section>
+
+  <!-- DETAILS -->
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-leaf">✦</div>
+    <div class="ornament-line"></div>
+  </div>
+
+  <section class="section">
+    <p class="section-label">Деталі</p>
+    <div class="details-grid">
+      <div class="detail-card">
+        <div class="detail-top">
+          <div class="detail-icon">🕐</div>
+          <div class="detail-title">Час</div>
+        </div>
+        <div class="detail-val" id="det-time"></div>
+      </div>
+
+      <a class="detail-card map-link" id="det-map-link" href="#" target="_blank" rel="noopener">
+        <div class="detail-top">
+          <div class="detail-icon">📍</div>
+          <div class="detail-title">Локація</div>
+        </div>
+        <div class="detail-val" id="det-venue"></div>
+      </a>
+
+      <div class="detail-card">
+        <div class="detail-top">
+          <div class="detail-icon">👗</div>
+          <div class="detail-title">Дрес-код</div>
+        </div>
+        <div class="detail-val" id="det-dress"></div>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-top">
+          <div class="detail-icon">💌</div>
+          <div class="detail-title">Відповідь</div>
+        </div>
+        <div class="detail-val" id="det-rsvp"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RSVP -->
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-leaf">✦</div>
+    <div class="ornament-line"></div>
+  </div>
+
+  <div class="rsvp-wrap">
+    <h2 class="rsvp-heading">Чи будете ви?</h2>
+
+    <div id="rsvp-form">
+      <div class="field-group">
+        <label class="field-label" for="f-name">Ваше ім'я *</label>
+        <input type="text" id="f-name" placeholder="Ім'я та прізвище" autocomplete="name" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="f-phone">Телефон</label>
+        <input type="tel" id="f-phone" placeholder="+380" autocomplete="tel" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="f-count">Кількість гостей *</label>
+        <select id="f-count">
+          <option value="1">1 особа — лише я</option>
+          <option value="2">2 особи — із партнером/кою</option>
+          <option value="3">3 особи</option>
+          <option value="4">4 особи</option>
+          <option value="5+">5 і більше</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="f-food">Харчові обмеження</label>
+        <input type="text" id="f-food" placeholder="вегетаріанець, алергія тощо — або залиште порожнім" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="f-wish">Побажання молодятам</label>
+        <textarea id="f-wish" placeholder="Пишіть від душі 💛"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Ваша відповідь *</label>
+        <div class="attend-btns">
+          <div class="attend-btn" id="btn-yes" onclick="selectAttend('yes')">✓ Так, буду!</div>
+          <div class="attend-btn" id="btn-no"  onclick="selectAttend('no')">✗ На жаль, ні</div>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitRSVP()">Надіслати відповідь</button>
+    </div>
+
+    <!-- Success -->
+    <div class="success-box" id="success-box">
+      <span class="success-icon">🤍</span>
+      <div class="success-title">Дякуємо!</div>
+      <div class="success-text" id="success-text"></div>
+    </div>
+
+    <!-- Guest list -->
+    <div class="guests-wrap" id="guests-wrap">
+      <p class="section-label" style="margin-top:0;">Вже відповіли</p>
+      <div id="guest-rows"></div>
+      <p class="guests-stats" id="guests-stats"></p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p id="footer-names"></p>
+  </footer>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LOGIC
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+/* ── Заповнення з CONFIG ────────────────────────────────────── */
+(function() {
+  var c = CONFIG;
+  var n = c.groomName + '<span class="hero-amp">&amp;</span>' + c.brideName;
+  document.getElementById('names-el').innerHTML = n;
+
+  var d = c.weddingDate;
+  var months = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+  document.getElementById('date-el').textContent = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' · Київ';
+
+  document.getElementById('det-time').textContent   = c.time;
+  document.getElementById('det-venue').innerHTML    = c.venue + '<br><small style="font-size:11px;color:var(--text-light)">' + c.address + '</small>';
+  document.getElementById('det-dress').textContent  = c.dresscode.replace('·', '\n');
+  document.getElementById('det-rsvp').textContent   = c.rsvpDeadline;
+  document.getElementById('footer-names').textContent = c.groomName + ' & ' + c.brideName + ' · ' + d.getFullYear();
+
+  var mapLink = document.getElementById('det-map-link');
+  if (c.mapsUrl && c.mapsUrl !== '') {
+    mapLink.href = c.mapsUrl;
+  } else {
+    mapLink.removeAttribute('href');
+    mapLink.style.cursor = 'default';
+  }
+})();
+
+/* ── Таймер ─────────────────────────────────────────────────── */
+function pad(n) { return n < 10 ? '0'+n : ''+n; }
+
+function tick() {
+  var diff = CONFIG.weddingDate - new Date();
+  if (diff < 0) diff = 0;
+  document.getElementById('t-d').textContent = pad(Math.floor(diff / 86400000));
+  document.getElementById('t-h').textContent = pad(Math.floor((diff % 86400000) / 3600000));
+  document.getElementById('t-m').textContent = pad(Math.floor((diff % 3600000)  / 60000));
+  document.getElementById('t-s').textContent = pad(Math.floor((diff % 60000)    / 1000));
+}
+tick();
+setInterval(tick, 1000);
+
+/* ── RSVP ───────────────────────────────────────────────────── */
+var attend = null;
+var localGuests = [];
+
+function selectAttend(val) {
+  attend = val;
+  document.getElementById('btn-yes').className = 'attend-btn' + (val==='yes' ? ' yes-active' : '');
+  document.getElementById('btn-no').className  = 'attend-btn' + (val==='no'  ? ' no-active'  : '');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function submitRSVP() {
+  var name  = document.getElementById('f-name').value.trim();
+  var phone = document.getElementById('f-phone').value.trim();
+  var count = document.getElementById('f-count').value;
+  var food  = document.getElementById('f-food').value.trim();
+  var wish  = document.getElementById('f-wish').value.trim();
+
+  if (!name)   { showToast('Будь ласка, введіть ваше ім\'я'); return; }
+  if (!attend) { showToast('Оберіть, чи будете ви на весіллі'); return; }
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Надсилаємо...';
+
+  var payload = {
+    timestamp: new Date().toISOString(),
+    name:      name,
+    phone:     phone,
+    count:     count,
+    food:      food,
+    wish:      wish,
+    attend:    attend === 'yes' ? 'Буду' : 'Не зможу'
+  };
+
+  /* Зберігаємо локально для списку */
+  localGuests.push({ name: name, count: count, attend: attend });
+  renderGuestList();
+
+  /* Відправка в Google Sheets */
+  var url = CONFIG.sheetsUrl;
+  if (url && url !== 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
+    fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function(e) { console.warn('Sheets error:', e); });
+  } else {
+    console.log('RSVP data (Google Sheets не підключено):', payload);
+  }
+
+  /* Показати success */
+  document.getElementById('rsvp-form').style.display = 'none';
+  var box = document.getElementById('success-box');
+  box.style.display = 'block';
+  document.getElementById('success-text').innerHTML =
+    attend === 'yes'
+      ? 'Ваша відповідь збережена.<br>Ми дуже раді, що ви будете з нами!'
+      : 'Ваша відповідь збережена.<br>Дякуємо, що написали — ми сумуватимемо!';
+}
+
+function renderGuestList() {
+  var wrap = document.getElementById('guests-wrap');
+  var rows = document.getElementById('guest-rows');
+  wrap.style.display = 'block';
+  rows.innerHTML = '';
+  var yes = 0, no = 0;
+  localGuests.forEach(function(g) {
+    g.attend === 'yes' ? yes++ : no++;
+    var r = document.createElement('div');
+    r.className = 'guest-row';
+    r.innerHTML =
+      '<div><div class="guest-name">' + g.name + (g.count > 1 ? ' · ' + g.count + ' ос.' : '') + '</div></div>' +
+      '<span class="g-badge ' + (g.attend==='yes' ? 'g-yes">Буду' : 'g-no">Не зможу') + '</span>';
+    rows.appendChild(r);
+  });
+  document.getElementById('guests-stats').textContent =
+    'Буде: ' + yes + '  ·  Не зможе: ' + no;
+}
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+
+  📋 ІНСТРУКЦІЯ: ПІДКЛЮЧЕННЯ GOOGLE SHEETS
+
+  1. Відкрий Google Sheets → створи нову таблицю
+  2. Перейди до Extensions → Apps Script
+  3. Встав наступний код у редактор і збережи:
+
+  ─────────────────────────────────────────────────
+
+  function doPost(e) {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data  = JSON.parse(e.postData.contents);
+
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['Час', "Ім'я", 'Телефон', 'Кількість', 'Їжа', 'Побажання', 'Відповідь']);
+    }
+
+    sheet.appendRow([
+      data.timestamp,
+      data.name,
+      data.phone,
+      data.count,
+      data.food,
+      data.wish,
+      data.attend
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  ─────────────────────────────────────────────────
+  4. Deploy → New deployment → Web app
+     - Execute as: Me
+     - Who has access: Anyone
+  5. Скопіюй URL деплою
+  6. Встав URL у CONFIG.sheetsUrl на початку HTML файлу
+
+  ═══════════════════════════════════════════════════════════ -->
+
+</body>
+</html>
